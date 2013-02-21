@@ -46,7 +46,7 @@ func TestValueToString(t *testing.T) {
 		"5":                   5,
 		"1.23":                1.23,
 		"[\"Cool\",\"Dude\"]": []string{"Cool", "Dude"},
-		"{\"cool\":true}":     map[string]interface{}{"cool": true},
+		"{\"cool\":true}":     JsonData{"cool": true},
 	}
 
 	for expected, given := range testValues {

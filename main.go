@@ -36,7 +36,7 @@ func main() {
 		usage()
 	}
 
-	var data map[string]interface{}
+	var data JsonData
 	var err error
 
 	if len(*filePath) > 0 {

@@ -12,29 +12,31 @@ var (
 	quotedString = regexp.MustCompile("\\A\"(.+)\"\\z")
 )
 
-func unmarshal(text []byte) (jsonData map[string]interface{}, err error) {
-	var data interface{}
+type JsonData map[string]interface{}
+
+func unmarshal(text []byte) (jsonData JsonData, err error) {
+	var data JsonData
 	err = json.Unmarshal(text, &data)
 	if err != nil {
-		return make(map[string]interface{}), err
+		return JsonData{}, err
 	}
 
-	return data.(map[string]interface{}), nil
+	return data, nil
 }
 
-func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
+func jsonFromFile(file string) (jsonData JsonData, err error) {
 	text, err := ioutil.ReadFile(file)
 	if err != nil {
-		return make(map[string]interface{}), err
+		return make(JsonData), err
 	}
 	return unmarshal(text)
 }
 
 // TODO: Needs tests.
-func jsonFromStdin() (jsonData map[string]interface{}, err error) {
+func jsonFromStdin() (jsonData JsonData, err error) {
 	text, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return make(map[string]interface{}), err
+		return make(JsonData), err
 	}
 	return unmarshal(text)
 }
@@ -53,7 +55,7 @@ func valueToString(value interface{}) (text string, err error) {
 	return text, nil
 }
 
-func get(data *map[string]interface{}, attributeChain []string) (value string, err error) {
+func get(data *JsonData, attributeChain []string) (value string, err error) {
 	attribute := attributeChain[0]
 
 	if len(attributeChain) == 1 {
@@ -65,11 +67,11 @@ func get(data *map[string]interface{}, attributeChain []string) (value string, e
 		return "", nil
 	}
 
-	subdata := rawSubdata.(map[string]interface{})
+	subdata := JsonData(rawSubdata.(map[string]interface{}))
 	return get(&subdata, attributeChain[1:])
 }
 
-func getValues(data *map[string]interface{}, attributeChains []string) (values []string, err error) {
+func getValues(data *JsonData, attributeChains []string) (values []string, err error) {
 	values = make([]string, len(attributeChains))
 	for i, attributeChain := range attributeChains {
 		value, err := get(data, strings.Split(attributeChain, "."))
