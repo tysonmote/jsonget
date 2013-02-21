@@ -3,6 +3,11 @@ jsonget
 
 A simple command-line utility for extracting plain-text values from JSON.
 
+Installation
+============
+
+    go install github.com/tysontate/jsonget
+
 Examples
 ========
 
