@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -13,6 +14,21 @@ var (
 
 func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
 	text, err := ioutil.ReadFile(file)
+	if err != nil {
+		return make(map[string]interface{}), err
+	}
+
+	var data interface{}
+	err = json.Unmarshal(text, &data)
+	if err != nil {
+		return make(map[string]interface{}), err
+	}
+
+	return data.(map[string]interface{}), nil
+}
+
+func jsonFromStdin() (jsonData map[string]interface{}, err error) {
+	text, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return make(map[string]interface{}), err
 	}

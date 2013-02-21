@@ -8,37 +8,52 @@ Installation
 
     go install github.com/tysontate/jsonget
 
-Binaries forthcoming.
+Usage
+=====
 
-Examples
-========
+Given `my.json`:
 
-    % cat test.json 
-    {
-      "foo": true,
-      "bar": {
-        "baz": 5
-      },
-      neat: "You bet."
-    }
+```json
+{
+  "foo": true,
+  "bar": {
+    "baz": 5
+  },
+  "neat": "You bet."
+}
+```
 
-    % jsonget test.json bar.baz
-    5
-    % jsonget test.json bar    
-    {"baz":5}
-    % jsonget test.json foo
-    true
-    % jsonget test.json neat
-    You bet.
-    % jsonget test_json/test.json bar.baz bar foo
-    5
-    {"baz":5,"biz":5.5}
-    true
+`jsonget` can read from files:
+
+```bash
+% jsonget --file my.json foo
+true
+```
+
+Or from stdin:
+
+```bash
+% cat my.json | jsonget foo
+true
+```
+
+JSON strings are returned without surrounding quotes:
+
+```bash
+% cat my.json | jsonget neat
+You bet.
+```
+
+And JSON objects and arrays are returned as JSON:
+
+```bash
+% cat my.json | jsonget bar
+{"baz":5}
+```
 
 TODO
 ====
 
 * Code documentation
 * Support accessing inside arrays
-* Support piping in / out
 
