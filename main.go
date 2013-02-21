@@ -20,7 +20,7 @@ func die(text string) {
 	os.Exit(1)
 }
 
-func assertNoError(err error) {
+func dieIfError(err error) {
 	if err != nil {
 		die(err.Error())
 	}
@@ -44,10 +44,10 @@ func main() {
 	} else {
 		data, err = jsonFromStdin()
 	}
-	assertNoError(err)
+	dieIfError(err)
 
 	values, err := getValues(&data, properties)
-	assertNoError(err)
+	dieIfError(err)
 
 	for _, value := range values {
 		fmt.Println(value)
