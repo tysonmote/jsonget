@@ -39,7 +39,6 @@ TODO
 ====
 
 * Code documentation
-* Handle improper access (i.e. bar.baz.wooo)
 * Support accessing inside arrays
 * Support piping in / out
 
