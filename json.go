@@ -12,12 +12,7 @@ var (
 	quotedString = regexp.MustCompile("\\A\"(.+)\"\\z")
 )
 
-func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
-	text, err := ioutil.ReadFile(file)
-	if err != nil {
-		return make(map[string]interface{}), err
-	}
-
+func unmarshal(text []byte) (jsonData map[string]interface{}, err error) {
 	var data interface{}
 	err = json.Unmarshal(text, &data)
 	if err != nil {
@@ -27,19 +22,21 @@ func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
 	return data.(map[string]interface{}), nil
 }
 
+func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
+	text, err := ioutil.ReadFile(file)
+	if err != nil {
+		return make(map[string]interface{}), err
+	}
+	return unmarshal(text)
+}
+
+// TODO: Needs tests.
 func jsonFromStdin() (jsonData map[string]interface{}, err error) {
 	text, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return make(map[string]interface{}), err
 	}
-
-	var data interface{}
-	err = json.Unmarshal(text, &data)
-	if err != nil {
-		return make(map[string]interface{}), err
-	}
-
-	return data.(map[string]interface{}), nil
+	return unmarshal(text)
 }
 
 func valueToString(value interface{}) (text string, err error) {
