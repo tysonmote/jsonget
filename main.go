@@ -11,11 +11,16 @@ var (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: jsonget file.json attribute[.subattribute] [...]\n")
-	os.Exit(2)
+	die("Usage: jsonget file.json attribute[.subattribute] [...]")
+}
+
+func die(text string) {
+	fmt.Fprintf(os.Stderr, "%s\n", text)
+	os.Exit(1)
 }
 
 func main() {
+	flag.Usage = usage
 	flag.Parse()
 
 	filePath := flag.Arg(0)
@@ -24,14 +29,12 @@ func main() {
 	if len(filePath) > 0 && len(properties) > 0 {
 		data, err := jsonFromFile(filePath)
 		if err != nil {
-			fmt.Println("ERROR:", err)
-			os.Exit(1)
+			die(err.Error())
 		}
 
 		values, err := getValues(&data, properties)
 		if err != nil {
-			fmt.Println("ERROR:", err)
-			os.Exit(1)
+			die(err.Error())
 		}
 		for _, value := range values {
 			fmt.Println(value)
