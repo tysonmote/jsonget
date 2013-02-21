@@ -6,14 +6,14 @@ useful, for example, when you're `curling` a JSON api and just want to get a
 single value from it:
 
 ```bash
-% curl http://openweathermap.org/data/2.0/weather/city/524901 | ./jsonget main.temp
+% curl http://openweathermap.org/data/2.0/weather/city/524901 | jsonget main.temp
 259.92
 ```
 
 Or multiple newline-separated values:
 
 ```bash
-% curl http://openweathermap.org/data/2.0/weather/city/524901 | ./jsonget name main.temp wind.speed
+% curl http://openweathermap.org/data/2.0/weather/city/524901 | jsonget name main.temp wind.speed
 Moscow
 259.92
 2
