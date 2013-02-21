@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+var (
+	printNulls = flag.Bool("nulls", false, "If true, null values will be printed as 'null'.")
+)
+
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: json file.json attribute[.subattribute] [...]\n")
 	os.Exit(2)
@@ -29,12 +33,20 @@ func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
 	return data.(map[string]interface{}), nil
 }
 
+func valueToString(value interface{}) (text string, err error) {
+	if value == nil && *printNulls == false {
+		return "", nil
+	}
+
+	textBytes, err := json.Marshal(value)
+	return string(textBytes), err
+}
+
 func get(data *map[string]interface{}, attributeChain []string) (value string, err error) {
 	attribute := attributeChain[0]
 
 	if len(attributeChain) == 1 {
-		text, err := json.Marshal((*data)[attribute])
-		return string(text), err
+		return valueToString((*data)[attribute])
 	}
 
 	subdata := (*data)[attribute].(map[string]interface{})
@@ -43,7 +55,7 @@ func get(data *map[string]interface{}, attributeChain []string) (value string, e
 
 func getValues(data *map[string]interface{}, attributeChains []string) (values []string, err error) {
 	values = make([]string, len(attributeChains))
-	for i, attributeChain := range(attributeChains) {
+	for i, attributeChain := range attributeChains {
 		value, err := get(data, strings.Split(attributeChain, "."))
 		if err != nil {
 			return values, nil
@@ -71,7 +83,7 @@ func main() {
 			fmt.Println("ERROR:", err)
 			os.Exit(1)
 		}
-		for _, value := range(values) {
+		for _, value := range values {
 			fmt.Println(value)
 		}
 	} else {
