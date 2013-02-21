@@ -66,7 +66,7 @@ func TestGet(t *testing.T) {
 		"true":                    []string{"foo"},
 		"{\"baz\":5,\"biz\":5.5}": []string{"bar"},
 		"5":                       []string{"bar", "baz"},
-		"":                        []string{"nope"},
+		"":                        []string{"nope", "nope", "nope"},
 	}
 
 	data, _ := jsonFromFile(GOOD_JSON_PATH)
@@ -83,7 +83,7 @@ func TestGet(t *testing.T) {
 func TestGetValues(t *testing.T) {
 	data, _ := jsonFromFile(GOOD_JSON_PATH)
 
-	attributes := []string{"foo", "bar.biz"}
+	attributes := []string{"foo", "bar.biz", "lol", "oh.no"}
 	values, err := getValues(&data, attributes)
 	assertNoError(t, err)
 	if values[0] != "true" {
@@ -91,5 +91,11 @@ func TestGetValues(t *testing.T) {
 	}
 	if values[1] != "5.5" {
 		t.Error("getValues returned:", values[1], "but we expected: 5.5")
+	}
+	if values[2] != "" {
+		t.Error("getValues returned:", values[2], "but we expected an empty string")
+	}
+	if values[3] != "" {
+		t.Error("getValues returned:", values[3], "but we expected an empty string")
 	}
 }

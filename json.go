@@ -47,7 +47,12 @@ func get(data *map[string]interface{}, attributeChain []string) (value string, e
 		return valueToString((*data)[attribute])
 	}
 
-	subdata := (*data)[attribute].(map[string]interface{})
+	rawSubdata := (*data)[attribute]
+	if rawSubdata == nil {
+		return "", nil
+	}
+
+	subdata := rawSubdata.(map[string]interface{})
 	return get(&subdata, attributeChain[1:])
 }
 
