@@ -3,7 +3,12 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"regexp"
 	"strings"
+)
+
+var (
+	quotedString = regexp.MustCompile("\\A\"(.+)\"\\z")
 )
 
 func jsonFromFile(file string) (jsonData map[string]interface{}, err error) {
@@ -27,7 +32,12 @@ func valueToString(value interface{}) (text string, err error) {
 	}
 
 	textBytes, err := json.Marshal(value)
-	return string(textBytes), err
+	if err != nil {
+		return "", err
+	}
+	text = string(textBytes)
+	text = quotedString.ReplaceAllString(text, "$1")
+	return text, nil
 }
 
 func get(data *map[string]interface{}, attributeChain []string) (value string, err error) {
@@ -46,7 +56,7 @@ func getValues(data *map[string]interface{}, attributeChains []string) (values [
 	for i, attributeChain := range attributeChains {
 		value, err := get(data, strings.Split(attributeChain, "."))
 		if err != nil {
-			return values, nil
+			return values, err
 		}
 		values[i] = value
 	}
