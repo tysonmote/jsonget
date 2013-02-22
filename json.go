@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -22,11 +22,10 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 	var cursor JsonObject
 	cursor = data
 
-	for i, attributePart := range(attributeParts) {
+	for i, attributePart := range attributeParts {
 		nextCursor := cursor[attributePart]
 
-		if i == attributePartsCount - 1 || nextCursor == nil {
-			// Last attribute part
+		if i == attributePartsCount-1 || nextCursor == nil {
 			return valueToString(nextCursor)
 		} else {
 			nextCursorMap, ok := nextCursor.(map[string]interface{})
@@ -103,4 +102,3 @@ func valueToString(value interface{}) (text string, err error) {
 	text = quotedString.ReplaceAllString(text, "$1")
 	return text, nil
 }
-

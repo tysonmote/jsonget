@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	filePath = flag.String("file", "", "Read from a file instead of stdin.")
+	filePath   = flag.String("file", "", "Read from a file instead of stdin.")
 	printNulls = flag.Bool("nulls", false, "If true, null values will be printed as 'null'.")
 )
 

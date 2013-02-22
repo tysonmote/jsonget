@@ -101,7 +101,7 @@ func TestGetValue(t *testing.T) {
 	_, err := data.GetValue("bar.baz.woo")
 	expectedError := "Can't read woo attribute on bar.baz because it is not a JSON object."
 	if err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err )
+		t.Error("Expected error message to be:", expectedError, "but got:", err)
 	}
 }
 
