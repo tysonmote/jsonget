@@ -12,7 +12,11 @@ var (
 )
 
 func usage() {
-	die("Usage: jsonget -f file.json attribute[.subattribute] [...]")
+	die(`Usage: jsonget -f [JSON_FILE] attribute ... [attribute]
+
+Examples:
+  cat data.json | jsonget person.name person.age
+  jsonget -f data.json person.address.city`)
 }
 
 func die(text string) {
