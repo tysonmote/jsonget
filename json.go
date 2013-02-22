@@ -28,12 +28,15 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 		if i == attributePartsCount - 1 || nextCursor == nil {
 			// Last attribute part
 			return valueToString(nextCursor)
-		} else if isMap(nextCursor) {
-			cursor = JsonObject(nextCursor.(map[string]interface{}))
 		} else {
-			parentAttribute := strings.Join(attributeParts[0:i+1], ".")
-			err := fmt.Errorf("Can't read %s attribute on %s because it is not a JSON object.", attributeParts[i+1], parentAttribute )
-			return "", err
+			nextCursorMap, ok := nextCursor.(map[string]interface{})
+			if ok {
+				cursor = JsonObject(nextCursorMap)
+			} else {
+				parentAttribute := strings.Join(attributeParts[0:i+1], ".")
+				err := fmt.Errorf("Can't read %s attribute on %s because it is not a JSON object.", attributeParts[i+1], parentAttribute)
+				return "", err
+			}
 		}
 	}
 
