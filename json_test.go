@@ -4,11 +4,19 @@ import (
 	"testing"
 )
 
+//
+// Test helpers
+//
+
 const (
 	GOOD_JSON_PATH         = "test_json/good.json"
 	BAD_JSON_PATH          = "test_json/bad.json"
 	NON_EXISTANT_JSON_PATH = "test_json/lol.json"
 )
+
+func reset() {
+	*printNulls = false
+}
 
 func assertError(t *testing.T, err error) {
 	if err == nil {
@@ -21,6 +29,10 @@ func assertNoError(t *testing.T, err error) {
 		t.Fatal("Unexpected error: ", err)
 	}
 }
+
+//
+// Tests
+//
 
 func TestJsonFromFile(t *testing.T) {
 	// Valid JSON
@@ -57,7 +69,13 @@ func TestValueToString(t *testing.T) {
 		}
 	}
 
-	// TODO: test nulls flag
+	defer reset()
+	*printNulls = true
+	value, err := valueToString(nil)
+	assertNoError(t, err)
+	if value != "null" {
+		t.Error("When printNulls is true, valueToString should return \"null\" for nils.")
+	}
 }
 
 func TestGet(t *testing.T) {
