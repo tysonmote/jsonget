@@ -78,13 +78,13 @@ func TestValueToString(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
-	testValues := map[string][]string{
+func TestGetValue(t *testing.T) {
+	testValues := map[string]string{
 		// Expected                Given
-		"true":                    []string{"foo"},
-		"{\"baz\":5,\"biz\":5.5}": []string{"bar"},
-		"5":                       []string{"bar", "baz"},
-		"":                        []string{"nope", "nope", "nope"},
+		"true":                    "foo",
+		"{\"baz\":5,\"biz\":5.5}": "bar",
+		"5":                       "bar.baz",
+		"":                        "nope.nope.nope",
 	}
 
 	data, _ := JsonDataFromFile(GOOD_JSON_PATH)
@@ -95,6 +95,13 @@ func TestGet(t *testing.T) {
 		if value != expected {
 			t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected, "Got:", value)
 		}
+	}
+
+	// Invalid accessors
+	_, err := data.GetValue("bar.baz.woo")
+	expectedError := "Can't read woo attribute on bar.baz because it is not a JSON object."
+	if err.Error() != expectedError {
+		t.Error("Expected error message to be:", expectedError, "but got:", err )
 	}
 }
 
