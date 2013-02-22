@@ -15,6 +15,10 @@ var (
 
 type JsonObject map[string]interface{}
 
+// Find and return the given attribute's value. The attribute can use
+// dot-notation ("foo.bar.baz") to access inner attributes. If the value is a
+// string, it is returned without quote marks. Otherwise, it is returned as a
+// JSON string.
 func (data JsonObject) GetValue(attribute string) (value string, err error) {
 	attributeParts := strings.Split(attribute, ".")
 	attributePartsCount := len(attributeParts)
@@ -42,11 +46,13 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 	return valueToString(cursor)
 }
 
-func (data JsonObject) GetValues(attributeChains []string) (values []string, err error) {
-	values = make([]string, len(attributeChains))
+// Get several values at once. See GetValue for attribute string formatting
+// rules.
+func (data JsonObject) GetValues(attributes []string) (values []string, err error) {
+	values = make([]string, len(attributes))
 
-	for i, attributeChain := range attributeChains {
-		value, err := data.GetValue(attributeChain)
+	for i, attribute := range attributes {
+		value, err := data.GetValue(attribute)
 		if err != nil {
 			return values, err
 		}
@@ -56,19 +62,17 @@ func (data JsonObject) GetValues(attributeChains []string) (values []string, err
 	return values, nil
 }
 
-// unmarshal takes a byte array and parses it into a JsonObject structure.
+// Parse the given JSON into a JsonObject object.
 func unmarshal(text []byte) (jsonData JsonObject, err error) {
 	var data JsonObject
-	err = json.Unmarshal(text, &data)
-	if err != nil {
+	if err = json.Unmarshal(text, &data); err != nil {
 		return JsonObject{}, err
 	}
 
 	return data, nil
 }
 
-// JsonObjectFromFile reads JSON data from the given file path and parses it into
-// a JsonObject object.
+// Read the given JSON data and parse it into a JsonObject object;
 func JsonObjectFromFile(file string) (jsonData JsonObject, err error) {
 	text, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -77,7 +81,7 @@ func JsonObjectFromFile(file string) (jsonData JsonObject, err error) {
 	return unmarshal(text)
 }
 
-// JsonObjectFromStdin reads stdin for JSON data and parses it into a JsonObject object.
+// Read stdin for JSON and parse it into a JsonObject object.
 func JsonObjectFromStdin() (jsonData JsonObject, err error) {
 	text, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
@@ -86,9 +90,9 @@ func JsonObjectFromStdin() (jsonData JsonObject, err error) {
 	return unmarshal(text)
 }
 
-// valueToString returns a string representation of the given value. If the
-// given value is nil, a blank string is returned. Or, if the printNulls flag
-// is true, a "null" string is returned.
+// Get a string representation of the given value. If the given value is nil, a
+// blank string is returned. Or, if the printNulls flag is true, a "null"
+// string is returned.
 func valueToString(value interface{}) (text string, err error) {
 	if value == nil && *printNulls == false {
 		return "", nil

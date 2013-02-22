@@ -19,11 +19,13 @@ Examples:
   jsonget -f data.json person.address.city`)
 }
 
+// Print an error message and exit.
 func die(text string) {
 	fmt.Fprintf(os.Stderr, "%s\n", text)
 	os.Exit(1)
 }
 
+// Die if given an error.
 func dieIfError(err error) {
 	if err != nil {
 		die(err.Error())
@@ -34,11 +36,14 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	properties := flag.Args()
+	// Load command-line attribute chains
 
-	if len(properties) == 0 {
+	attributes := flag.Args()
+	if len(attributes) == 0 {
 		usage()
 	}
+
+	// Read in the JSON
 
 	var data JsonObject
 	var err error
@@ -50,7 +55,9 @@ func main() {
 	}
 	dieIfError(err)
 
-	values, err := data.GetValues(properties)
+	// Get and print the values from the JSON
+
+	values, err := data.GetValues(attributes)
 	dieIfError(err)
 
 	for _, value := range values {
