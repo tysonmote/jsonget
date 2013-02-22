@@ -34,20 +34,20 @@ func assertNoError(t *testing.T, err error) {
 // Tests
 //
 
-func TestJsonFromFile(t *testing.T) {
+func TestJsonDataFromFile(t *testing.T) {
 	// Valid JSON
-	data, err := jsonFromFile(GOOD_JSON_PATH)
+	data, err := JsonDataFromFile(GOOD_JSON_PATH)
 	assertNoError(t, err)
 	if data["foo"] != true {
 		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
 	}
 
 	// Bad JSON
-	data, err = jsonFromFile(BAD_JSON_PATH)
+	data, err = JsonDataFromFile(BAD_JSON_PATH)
 	assertError(t, err)
 
 	// Invalid path
-	data, err = jsonFromFile(NON_EXISTANT_JSON_PATH)
+	data, err = JsonDataFromFile(NON_EXISTANT_JSON_PATH)
 	assertError(t, err)
 }
 
@@ -87,10 +87,10 @@ func TestGet(t *testing.T) {
 		"":                        []string{"nope", "nope", "nope"},
 	}
 
-	data, _ := jsonFromFile(GOOD_JSON_PATH)
+	data, _ := JsonDataFromFile(GOOD_JSON_PATH)
 
 	for expected, attributeChain := range testValues {
-		value, err := get(&data, attributeChain)
+		value, err := data.GetValue(attributeChain)
 		assertNoError(t, err)
 		if value != expected {
 			t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected, "Got:", value)
@@ -99,10 +99,10 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetValues(t *testing.T) {
-	data, _ := jsonFromFile(GOOD_JSON_PATH)
+	data, _ := JsonDataFromFile(GOOD_JSON_PATH)
 
 	attributes := []string{"foo", "bar.biz", "lol", "oh.no"}
-	values, err := getValues(&data, attributes)
+	values, err := data.GetValues(attributes)
 	assertNoError(t, err)
 	if values[0] != "true" {
 		t.Error("getValues returned:", values[0], "but we expected: true")

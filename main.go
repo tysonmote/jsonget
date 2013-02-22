@@ -40,13 +40,13 @@ func main() {
 	var err error
 
 	if len(*filePath) > 0 {
-		data, err = jsonFromFile(*filePath)
+		data, err = JsonDataFromFile(*filePath)
 	} else {
-		data, err = jsonFromStdin()
+		data, err = JsonDataFromStdin()
 	}
 	dieIfError(err)
 
-	values, err := getValues(&data, properties)
+	values, err := data.GetValues(properties)
 	dieIfError(err)
 
 	for _, value := range values {
