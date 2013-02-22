@@ -34,20 +34,20 @@ func assertNoError(t *testing.T, err error) {
 // Tests
 //
 
-func TestJsonDataFromFile(t *testing.T) {
+func TestJsonObjectFromFile(t *testing.T) {
 	// Valid JSON
-	data, err := JsonDataFromFile(GOOD_JSON_PATH)
+	data, err := JsonObjectFromFile(GOOD_JSON_PATH)
 	assertNoError(t, err)
 	if data["foo"] != true {
 		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
 	}
 
 	// Bad JSON
-	data, err = JsonDataFromFile(BAD_JSON_PATH)
+	data, err = JsonObjectFromFile(BAD_JSON_PATH)
 	assertError(t, err)
 
 	// Invalid path
-	data, err = JsonDataFromFile(NON_EXISTANT_JSON_PATH)
+	data, err = JsonObjectFromFile(NON_EXISTANT_JSON_PATH)
 	assertError(t, err)
 }
 
@@ -58,7 +58,7 @@ func TestValueToString(t *testing.T) {
 		"5":                   5,
 		"1.23":                1.23,
 		"[\"Cool\",\"Dude\"]": []string{"Cool", "Dude"},
-		"{\"cool\":true}":     JsonData{"cool": true},
+		"{\"cool\":true}":     JsonObject{"cool": true},
 	}
 
 	for expected, given := range testValues {
@@ -87,7 +87,7 @@ func TestGetValue(t *testing.T) {
 		"":                        "nope.nope.nope",
 	}
 
-	data, _ := JsonDataFromFile(GOOD_JSON_PATH)
+	data, _ := JsonObjectFromFile(GOOD_JSON_PATH)
 
 	for expected, attributeChain := range testValues {
 		value, err := data.GetValue(attributeChain)
@@ -106,7 +106,7 @@ func TestGetValue(t *testing.T) {
 }
 
 func TestGetValues(t *testing.T) {
-	data, _ := JsonDataFromFile(GOOD_JSON_PATH)
+	data, _ := JsonObjectFromFile(GOOD_JSON_PATH)
 
 	attributes := []string{"foo", "bar.biz", "lol", "oh.no"}
 	values, err := data.GetValues(attributes)

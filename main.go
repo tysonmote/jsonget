@@ -36,13 +36,13 @@ func main() {
 		usage()
 	}
 
-	var data JsonData
+	var data JsonObject
 	var err error
 
 	if len(*filePath) > 0 {
-		data, err = JsonDataFromFile(*filePath)
+		data, err = JsonObjectFromFile(*filePath)
 	} else {
-		data, err = JsonDataFromStdin()
+		data, err = JsonObjectFromStdin()
 	}
 	dieIfError(err)
 

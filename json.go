@@ -13,13 +13,13 @@ var (
 	quotedString = regexp.MustCompile("\\A\"(.+)\"\\z")
 )
 
-type JsonData map[string]interface{}
+type JsonObject map[string]interface{}
 
-func (data JsonData) GetValue(attribute string) (value string, err error) {
+func (data JsonObject) GetValue(attribute string) (value string, err error) {
 	attributeParts := strings.Split(attribute, ".")
 	attributePartsCount := len(attributeParts)
 
-	var cursor JsonData
+	var cursor JsonObject
 	cursor = data
 
 	for i, attributePart := range(attributeParts) {
@@ -29,7 +29,7 @@ func (data JsonData) GetValue(attribute string) (value string, err error) {
 			// Last attribute part
 			return valueToString(nextCursor)
 		} else if isMap(nextCursor) {
-			cursor = JsonData(nextCursor.(map[string]interface{}))
+			cursor = JsonObject(nextCursor.(map[string]interface{}))
 		} else {
 			parentAttribute := strings.Join(attributeParts[0:i+1], ".")
 			err := fmt.Errorf("Can't read %s attribute on %s because it is not a JSON object.", attributeParts[i+1], parentAttribute )
@@ -40,7 +40,7 @@ func (data JsonData) GetValue(attribute string) (value string, err error) {
 	return valueToString(cursor)
 }
 
-func (data JsonData) GetValues(attributeChains []string) (values []string, err error) {
+func (data JsonObject) GetValues(attributeChains []string) (values []string, err error) {
 	values = make([]string, len(attributeChains))
 
 	for i, attributeChain := range attributeChains {
@@ -54,32 +54,32 @@ func (data JsonData) GetValues(attributeChains []string) (values []string, err e
 	return values, nil
 }
 
-// unmarshal takes a byte array and parses it into a JsonData structure.
-func unmarshal(text []byte) (jsonData JsonData, err error) {
-	var data JsonData
+// unmarshal takes a byte array and parses it into a JsonObject structure.
+func unmarshal(text []byte) (jsonData JsonObject, err error) {
+	var data JsonObject
 	err = json.Unmarshal(text, &data)
 	if err != nil {
-		return JsonData{}, err
+		return JsonObject{}, err
 	}
 
 	return data, nil
 }
 
-// JsonDataFromFile reads JSON data from the given file path and parses it into
-// a JsonData object.
-func JsonDataFromFile(file string) (jsonData JsonData, err error) {
+// JsonObjectFromFile reads JSON data from the given file path and parses it into
+// a JsonObject object.
+func JsonObjectFromFile(file string) (jsonData JsonObject, err error) {
 	text, err := ioutil.ReadFile(file)
 	if err != nil {
-		return make(JsonData), err
+		return make(JsonObject), err
 	}
 	return unmarshal(text)
 }
 
-// JsonDataFromStdin reads stdin for JSON data and parses it into a JsonData object.
-func JsonDataFromStdin() (jsonData JsonData, err error) {
+// JsonObjectFromStdin reads stdin for JSON data and parses it into a JsonObject object.
+func JsonObjectFromStdin() (jsonData JsonObject, err error) {
 	text, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		return make(JsonData), err
+		return make(JsonObject), err
 	}
 	return unmarshal(text)
 }
