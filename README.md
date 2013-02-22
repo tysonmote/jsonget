@@ -2,7 +2,7 @@ jsonget
 -------
 
 `jsonget` is a command-line tool for extracting values out from JSON. This is
-useful, for example, when you're `curling` a JSON api and just want to get a
+useful, for example, when you're `curl`ing a JSON api and just want to get a
 single value from it:
 
 ```bash
