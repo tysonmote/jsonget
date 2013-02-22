@@ -70,6 +70,5 @@ And JSON objects and arrays are returned as JSON:
 TODO
 ====
 
-* Code documentation
 * Support accessing inside arrays
 
