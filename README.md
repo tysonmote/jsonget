@@ -22,7 +22,7 @@ Moscow
 Installation
 ============
 
-    go install github.com/tysontate/jsonget
+    go get github.com/tysontate/jsonget
 
 Usage
 =====
