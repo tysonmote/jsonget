@@ -86,6 +86,7 @@ func TestGetValue(t *testing.T) {
 		"5":                       "bar.baz",
 		"":                        "nope.nope.nope",
 		"spoon":                   "whoa[3]",
+		"42":                      "stuff[2][1]",
 	}
 
 	data, _ := JsonObjectFromFile(GOOD_JSON_PATH)

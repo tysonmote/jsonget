@@ -5,6 +5,7 @@
     "biz": 5.5
   },
   "neat": "You bet.",
-  "whoa": ["there", "is", "no", "spoon"]
+  "whoa": ["there", "is", "no", "spoon"],
+  "stuff": [[40, 23, -3], [2,30], [21, 42, 100]]
 }
 
