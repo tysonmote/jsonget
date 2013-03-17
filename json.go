@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"strconv"
 )
 
 var (
@@ -27,7 +28,21 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 	cursor = data
 
 	for i, attributePart := range attributeParts {
-		nextCursor := cursor[attributePart]
+		var nextCursor interface{}
+
+		// if attributePart has '[<int>]' in it, then index into array
+		aryExp, aryIndices, attrPartTrimmed := isArrayExpression(attributePart)
+
+		if aryExp {
+			nextCursor, _ = cursor[attrPartTrimmed].([]interface{})
+
+			for i:=0; i < len(aryIndices); i++ {
+				arrayCursor, _ := nextCursor.([]interface{})
+				nextCursor = arrayCursor[aryIndices[i]]
+			}
+		} else {
+			nextCursor = cursor[attributePart]
+		}
 
 		if i == attributePartsCount-1 || nextCursor == nil {
 			return valueToString(nextCursor)
@@ -106,3 +121,27 @@ func valueToString(value interface{}) (text string, err error) {
 	text = quotedString.ReplaceAllString(text, "$1")
 	return text, nil
 }
+
+// Check if attribute is an array expression (e.g.  whoa[3], stuff[1][5], ... etc)
+func isArrayExpression(attribute string) (bool, []uint64, string) {
+	reArray, _ := regexp.Compile(`\[\d+\]`)
+
+	//                                    magic ↴
+	matches := reArray.FindAllString(attribute, 42)
+	n := len(matches)
+	indices := []uint64{}
+	if n > 0 {
+		for i:=0; i < n; i++ {
+			sIndex := strings.Replace(matches[i][1:], `]`, "", 1)
+			index, _ := strconv.ParseUint(sIndex, 10, 64)
+			indices = append(indices, index)
+		}
+		bidx := strings.Index(attribute, `]`)
+		if bidx != -1 {
+			attribute = attribute[:bidx-2]
+		}
+	}
+
+	return n > 0, indices, attribute
+}
+

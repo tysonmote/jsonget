@@ -71,4 +71,4 @@ TODO
 ====
 
 * Support accessing inside arrays
-
+* Find out the maximum dimension of a JSON array
