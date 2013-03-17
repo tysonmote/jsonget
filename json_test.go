@@ -79,12 +79,13 @@ func TestValueToString(t *testing.T) {
 }
 
 func TestGetValue(t *testing.T) {
-	testValues := map[string]string{
-		// Expected                Given
+	testValues := map[string]string {
+		// Expected               Given
 		"true":                    "foo",
 		"{\"baz\":5,\"biz\":5.5}": "bar",
 		"5":                       "bar.baz",
 		"":                        "nope.nope.nope",
+		"spoon":                   "whoa[3]",
 	}
 
 	data, _ := JsonObjectFromFile(GOOD_JSON_PATH)

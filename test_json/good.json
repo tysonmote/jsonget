@@ -4,6 +4,7 @@
     "baz": 5,
     "biz": 5.5
   },
-  "neat": "You bet."
+  "neat": "You bet.",
+  "whoa": ["there", "is", "no", "spoon"]
 }
 
