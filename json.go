@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"errors"
 	"regexp"
 	"strings"
 	"strconv"
@@ -38,7 +39,12 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 
 			for i:=0; i < len(aryIndices); i++ {
 				arrayCursor, _ := nextCursor.([]interface{})
-				nextCursor = arrayCursor[aryIndices[i]]
+
+				if aryIndices[i] < uint64(len(arrayCursor)) {
+					nextCursor = arrayCursor[aryIndices[i]]
+				} else {
+					return "", errors.New("Index out of bounds of JSON array")
+				}
 			}
 		} else {
 			nextCursor = cursor[attributePart]
@@ -123,6 +129,9 @@ func valueToString(value interface{}) (text string, err error) {
 }
 
 // Check if attribute is an array expression (e.g.  whoa[3], stuff[1][5], ... etc)
+//   Return: - whether it is array expression
+//           - list of index values
+//           - name of json key
 func isArrayExpression(attribute string) (bool, []uint64, string) {
 	reArray, _ := regexp.Compile(`\[\d+\]`)
 
@@ -142,6 +151,6 @@ func isArrayExpression(attribute string) (bool, []uint64, string) {
 		}
 	}
 
-	return n > 0, indices, attribute
-}
+		return n > 0, indices, attribute
+	}
 
