@@ -22,7 +22,7 @@ Moscow
 Installation
 ============
 
-    go install github.com/tysontate/jsonget
+    go get github.com/tysontate/jsonget
 
 Usage
 =====
@@ -35,7 +35,10 @@ Given `my.json`:
   "bar": {
     "baz": 5
   },
-  "neat": "You bet."
+  "neat": "You bet.",
+  "stuff": {
+    "things": ["cheese", "barley", "corn"]
+  }
 }
 ```
 
@@ -60,15 +63,17 @@ JSON strings are returned without surrounding quotes:
 You bet.
 ```
 
-And JSON objects and arrays are returned as JSON:
+Arrays can be accessed:
+
+```base
+% cat my.json | jsonget stuff.things[2] 
+corn
+```
+
+And entire JSON objects and arrays can be returned as JSON:
 
 ```bash
 % cat my.json | jsonget bar
 {"baz":5}
 ```
-
-TODO
-====
-
-* Support accessing inside arrays
 
