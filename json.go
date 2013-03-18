@@ -1,66 +1,97 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"errors"
+	"reflect"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
-var (
-	quotedString = regexp.MustCompile("\\A\"(.+)\"\\z")
-)
+var quotedString = regexp.MustCompile(`\A"(.+)"\z`)
 
-type JsonObject map[string]interface{}
+type JsonData struct {
+	json interface{}
+}
+
+// Read the given JSON data and parse it into a JsonObject object;
+func LoadFile(file string) (data *JsonData, err error) {
+	text, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	object, err := unmarshal(text)
+	if err != nil {
+		return nil, err
+	}
+	return &JsonData{object}, nil
+}
+
+// Read stdin for JSON and parse it into a JsonObject object.
+func LoadStdin() (data *JsonData, err error) {
+	text, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		return nil, err
+	}
+	object, err := unmarshal(text)
+	if err != nil {
+		return nil, err
+	}
+	return &JsonData{object}, nil
+}
 
 // Find and return the given attribute's value. The attribute can use
 // dot-notation ("foo.bar.baz") to access inner attributes. If the value is a
 // string, it is returned without quote marks. Otherwise, it is returned as a
 // JSON string.
-func (data JsonObject) GetValue(attribute string) (value string, err error) {
-	attributeParts := strings.Split(attribute, ".")
+func (j *JsonData) GetValue(attribute string) (value string, err error) {
+	attributeParts := splitAttributeParts(attribute)
 	attributePartsCount := len(attributeParts)
 
-	var cursor JsonObject
-	cursor = data
+	cursor := j.json
 
 	for i, attributePart := range attributeParts {
 		var nextCursor interface{}
 
-		// if attributePart has '[<int>]' in it, then index into array
-		aryExp, aryIndices, attrPartTrimmed := isArrayExpression(attributePart)
+		if cursor == nil {
+			errorString := fmt.Sprintf("Cannot access \"%s\" on nil.", attributePart)
+			return "", errors.New(errorString)
+		}
 
-		if aryExp {
-			nextCursor, _ = cursor[attrPartTrimmed].([]interface{})
+		cursorKind := reflect.ValueOf(cursor).Kind()
 
-			for i:=0; i < len(aryIndices); i++ {
-				arrayCursor, _ := nextCursor.([]interface{})
-
-				if aryIndices[i] < uint64(len(arrayCursor)) {
-					nextCursor = arrayCursor[aryIndices[i]]
-				} else {
-					return "", errors.New("Index out of bounds of JSON array")
-				}
+		switch cursorKind {
+		case reflect.Map:
+			nextCursor = cursor.(map[string]interface{})[attributePart]
+		case reflect.Slice:
+			index, err := strconv.ParseInt(attributePart, 10, 0)
+			if err != nil {
+				parentAttribute := strings.Join(attributeParts[0:i], ".")
+				errorString := fmt.Sprintf("%s is an array, but %s is not a valid index.", parentAttribute, attributePart)
+				return "", errors.New(errorString)
 			}
-		} else {
-			nextCursor = cursor[attributePart]
+			cursorSlice := cursor.([]interface{})
+			if int(index) >= len(cursorSlice) {
+				parentAttribute := strings.Join(attributeParts[0:i], ".")
+				errorString := fmt.Sprintf("%d is outside the bounds of the %d elements in %s.", index, len(cursorSlice), parentAttribute)
+				return "", errors.New(errorString)
+			}
+			nextCursor = cursorSlice[index]
+		default:
+			parentAttribute := strings.Join(attributeParts[0:i], ".")
+			errorString := fmt.Sprintf("Can't get %s on %s because it is a %v.", attributePart, parentAttribute, cursorKind)
+			return "", errors.New(errorString)
 		}
 
 		if i == attributePartsCount-1 || nextCursor == nil {
 			return valueToString(nextCursor)
 		} else {
-			nextCursorMap, ok := nextCursor.(map[string]interface{})
-			if ok {
-				cursor = JsonObject(nextCursorMap)
-			} else {
-				parentAttribute := strings.Join(attributeParts[0:i+1], ".")
-				err := fmt.Errorf("Can't read %s attribute on %s because it is not a JSON object.", attributeParts[i+1], parentAttribute)
-				return "", err
-			}
+			cursor = nextCursor
 		}
 	}
 
@@ -69,11 +100,11 @@ func (data JsonObject) GetValue(attribute string) (value string, err error) {
 
 // Get several values at once. See GetValue for attribute string formatting
 // rules.
-func (data JsonObject) GetValues(attributes []string) (values []string, err error) {
+func (j *JsonData) GetValues(attributes []string) (values []string, err error) {
 	values = make([]string, len(attributes))
 
 	for i, attribute := range attributes {
-		value, err := data.GetValue(attribute)
+		value, err := j.GetValue(attribute)
 		if err != nil {
 			return values, err
 		}
@@ -83,32 +114,14 @@ func (data JsonObject) GetValues(attributes []string) (values []string, err erro
 	return values, nil
 }
 
-// Parse the given JSON into a JsonObject object.
-func unmarshal(text []byte) (jsonData JsonObject, err error) {
-	var data JsonObject
-	if err = json.Unmarshal(text, &data); err != nil {
-		return JsonObject{}, err
-	}
-
-	return data, nil
-}
-
-// Read the given JSON data and parse it into a JsonObject object;
-func JsonObjectFromFile(file string) (jsonData JsonObject, err error) {
-	text, err := ioutil.ReadFile(file)
+// Parse the given JSON.
+func unmarshal(text []byte) (object interface{}, err error) {
+	var jsonData interface{}
+	err = json.Unmarshal(text, &jsonData)
 	if err != nil {
-		return make(JsonObject), err
+		return nil, err
 	}
-	return unmarshal(text)
-}
-
-// Read stdin for JSON and parse it into a JsonObject object.
-func JsonObjectFromStdin() (jsonData JsonObject, err error) {
-	text, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return make(JsonObject), err
-	}
-	return unmarshal(text)
+	return jsonData, nil
 }
 
 // Get a string representation of the given value. If the given value is nil, a
@@ -128,29 +141,21 @@ func valueToString(value interface{}) (text string, err error) {
 	return text, nil
 }
 
-// Check if attribute is an array expression (e.g.  whoa[3], stuff[1][5], ... etc)
-//   Return: - whether it is array expression
-//           - list of index values
-//           - name of json key
-func isArrayExpression(attribute string) (bool, []uint64, string) {
-	reArray, _ := regexp.Compile(`\[\d+\]`)
+// Returns all the attribute parts, including turning array access into "plain"
+// attribute access. This is something of a hack.
+//
+// Examples:
+//   * "foo.bar" --> []string{"foo", "bar"}
+//   * "foo.bar[2].neat --> [string]{"foo", "bar", "2", "neat"}
+func splitAttributeParts(attribute string) []string {
+	brackets := regexp.MustCompile(`[\[\]]+`)
+	dots := regexp.MustCompile(`\.+`)
 
-	//                                    magic ↴
-	matches := reArray.FindAllString(attribute, 42)
-	n := len(matches)
-	indices := []uint64{}
-	if n > 0 {
-		for i:=0; i < n; i++ {
-			sIndex := strings.Replace(matches[i][1:], `]`, "", 1)
-			index, _ := strconv.ParseUint(sIndex, 10, 64)
-			indices = append(indices, index)
-		}
-		bidx := strings.Index(attribute, `]`)
-		if bidx != -1 {
-			attribute = attribute[:bidx-2]
-		}
+	attributeBytes := brackets.ReplaceAll([]byte(attribute), []byte{'.'})
+	attributeBytes = dots.ReplaceAll(attributeBytes, []byte{'.'})
+
+	if bytes.LastIndex(attributeBytes, []byte{'.'}) == len(attributeBytes)-1 {
+		attributeBytes = attributeBytes[:len(attributeBytes)-1]
 	}
-
-		return n > 0, indices, attribute
-	}
-
+	return strings.Split(string(attributeBytes), ".")
+}

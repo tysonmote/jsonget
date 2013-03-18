@@ -6,6 +6,12 @@
   },
   "neat": "You bet.",
   "whoa": ["there", "is", "no", "spoon"],
-  "stuff": [[40, 23, -3], [2,30], [21, 42, 100]]
+  "deep": [
+    "first!",
+    {
+      "introspective": true,
+      "peanuts": ["yum"]
+    }
+  ]
 }
 

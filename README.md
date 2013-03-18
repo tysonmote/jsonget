@@ -70,7 +70,7 @@ Arrays can be accessed:
 corn
 ```
 
-And entire JSON objects and arrays can be returned as JSON:
+And JSON objects and arrays are returned as JSON:
 
 ```bash
 % cat my.json | jsonget bar

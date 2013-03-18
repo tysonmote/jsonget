@@ -45,13 +45,13 @@ func main() {
 
 	// Read in the JSON
 
-	var data JsonObject
+	var data *JsonData
 	var err error
 
 	if len(*filePath) > 0 {
-		data, err = JsonObjectFromFile(*filePath)
+		data, err = LoadFile(*filePath)
 	} else {
-		data, err = JsonObjectFromStdin()
+		data, err = LoadStdin()
 	}
 	dieIfError(err)
 
