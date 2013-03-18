@@ -37,8 +37,7 @@ Given `my.json`:
   },
   "neat": "You bet.",
   "stuff": {
-    "things": ["cheese", "barley", "corn"],
-    "nothings": []
+    "things": ["cheese", "barley", "corn"]
   }
 }
 ```
@@ -64,21 +63,17 @@ JSON strings are returned without surrounding quotes:
 You bet.
 ```
 
-And JSON objects and arrays are returned as JSON:
+Arrays can be accessed:
 
-```bash
-% cat my.json | jsonget bar
-{"baz":5}
-```
-
-Also, arrays can now be accessed:
 ```base
 % cat my.json | jsonget stuff.things[2] 
 corn
 ```
 
-TODO
-====
+And entire JSON objects and arrays can be returned as JSON:
 
-* ~~Support accessing inside arrays~~
+```bash
+% cat my.json | jsonget bar
+{"baz":5}
+```
 
