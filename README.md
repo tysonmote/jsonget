@@ -35,7 +35,11 @@ Given `my.json`:
   "bar": {
     "baz": 5
   },
-  "neat": "You bet."
+  "neat": "You bet.",
+  "stuff": {
+    "things": ["cheese", "barley", "corn"],
+    "nothings": []
+  }
 }
 ```
 
@@ -67,8 +71,14 @@ And JSON objects and arrays are returned as JSON:
 {"baz":5}
 ```
 
+Also, arrays can now be accessed:
+```base
+% cat my.json | jsonget stuff.things[2] 
+corn
+```
+
 TODO
 ====
 
-* Support accessing inside arrays
-* Find out the maximum dimension of a JSON array
+* ~~Support accessing inside arrays~~
+
