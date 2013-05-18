@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/stvp/assert"
 	"testing"
 )
 
@@ -21,9 +22,28 @@ func reset() {
 	*printNulls = false
 }
 
-func assertError(t *testing.T, err error) {
-	if err == nil {
-		t.Fatal("Expected error, but got nil instead.")
+func testGetValues(t *testing.T, path string, expectedValues map[string][]string) {
+	data, err := LoadFile(path)
+	assert.Nil(t, err)
+
+	for attributeChain, expected := range expectedValues {
+		values, err := data.GetValues(attributeChain)
+		assert.Nil(t, err)
+		assert.Equal(t, len(expected), len(values))
+		for i, value := range values {
+			assert.Equal(t, expected[i], value)
+		}
+	}
+}
+
+func testGetValuesErrors(t *testing.T, path string, expectedErrors map[string]string) {
+	data, err := LoadFile(path)
+	assert.Nil(t, err)
+
+	for attributeChain, expectedError := range expectedErrors {
+		_, err = data.GetValues(attributeChain)
+		assert.NotNil(t, err)
+		assert.Equal(t, expectedError, err.Error())
 	}
 }
 
@@ -34,29 +54,21 @@ func assertError(t *testing.T, err error) {
 func TestJsonObjectFromFile(t *testing.T) {
 	// Valid JSON
 	data, err := LoadFile(GOOD_JSON_PATH)
-	if err != nil {
-		t.Fatal("Unexpected error: ", err)
-	}
-	if data.json.(map[string]interface{})["foo"] != true {
-		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, true, data.json.(map[string]interface{})["foo"])
 
 	// Array JSON
 	data, err = LoadFile(ARRAY_JSON_PATH)
-	if err != nil {
-		t.Fatal("Unexpected error: ", err)
-	}
-	if (data.json.([]interface{})[0]).(map[string]interface{})["name"] != "Dude" {
-		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, "Dude", (data.json.([]interface{})[0]).(map[string]interface{})["name"])
 
 	// Bad JSON
 	data, err = LoadFile(BAD_JSON_PATH)
-	assertError(t, err)
+	assert.NotNil(t, err)
 
 	// Invalid path
 	data, err = LoadFile(NON_EXISTANT_JSON_PATH)
-	assertError(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestValueToString(t *testing.T) {
@@ -71,70 +83,36 @@ func TestValueToString(t *testing.T) {
 
 	for expected, given := range testValues {
 		value, err := valueToString(given)
-		if err != nil {
-			t.Fatal("Unexpected error: ", err)
-		}
-		if value != expected {
-			t.Error("valueToString didn't convert a value properly. Expected:", expected, "Got:", value)
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, expected, value)
 	}
 
 	defer reset()
 	*printNulls = true
 	value, err := valueToString(nil)
-	if err != nil {
-		t.Fatal("Unexpected error: ", err)
-	}
-	if value != "null" {
-		t.Error("When printNulls is true, valueToString should return \"null\" for nils.")
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, "null", value, `when printNulls is true, nulls should be returned as "null"`)
 }
 
 func TestGetValues(t *testing.T) {
-	testValues := map[string]string{
+	testValues := map[string][]string{
 		// Given              Expected
-		"foo":                "true",
-		"bar":                "{\"baz\":5,\"biz\":5.5}",
-		"bar.baz":            "5",
-		"whoa[3]":            "spoon",
-		"deep[1].peanuts[0]": "yum",
+		"foo":                []string{"true"},
+		"bar":                []string{"{\"baz\":5,\"biz\":5.5}"},
+		"bar.baz":            []string{"5"},
+		"whoa[3]":            []string{"spoon"},
+		"deep[1].peanuts[0]": []string{"yum"},
 	}
+	testGetValues(t, GOOD_JSON_PATH, testValues)
 
-	data, _ := LoadFile(GOOD_JSON_PATH)
-
-	for attributeChain, expected := range testValues {
-		values, err := data.GetValues(attributeChain)
-		if err != nil {
-			t.Fatal("Unexpected error: ", err, "while getting", attributeChain)
-		}
-		if values[0] != expected {
-			t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected, "Got:", values[0])
-		}
+	testErrors := map[string]string{
+		// Given                 Expected error
+		"bar.baz.woo":           `Can't get "woo" on "bar.baz" because it is a float64`,
+		"nope.nope":             `Cannot access "nope" on nil`,
+		"deep[1].peanuts[10]":   `10 is outside the bounds of the 1 elements in "deep.1.peanuts"`,
+		"deep[1].peanuts.yikes": `"yikes" is not a valid index for the array at "deep.1.peanuts"`,
 	}
-
-	// Invalid access on non-objects
-	_, err := data.GetValues("bar.baz.woo")
-	expectedError := `Can't get "woo" on "bar.baz" because it is a float64`
-	if err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
-	_, err = data.GetValues("nope.nope")
-	expectedError = `Cannot access "nope" on nil`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
-
-	// Invalid array access
-	_, err = data.GetValues("deep[1].peanuts[10]")
-	expectedError = `10 is outside the bounds of the 1 elements in "deep.1.peanuts"`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
-	_, err = data.GetValues("deep[1].peanuts.yikes")
-	expectedError = `"yikes" is not a valid index for the array at "deep.1.peanuts"`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
+	testGetValuesErrors(t, GOOD_JSON_PATH, testErrors)
 }
 
 func TestGetValuesWildcards(t *testing.T) {
@@ -145,44 +123,15 @@ func TestGetValuesWildcards(t *testing.T) {
 		"things.*.names.0": []string{"cool", "rad", "dude"},
 		"things.*.names.*": []string{"cool", "sweet", "rad", "dude", "bro", "guys"},
 	}
+	testGetValues(t, WILDCARDS_JSON_PATH, testValues)
 
-	data, _ := LoadFile(WILDCARDS_JSON_PATH)
-
-	for attributeChain, expected := range testValues {
-		values, err := data.GetValues(attributeChain)
-		if err != nil {
-			t.Fatal("Unexpected error: ", err, "while getting", attributeChain)
-		}
-		if len(values) != len(expected) {
-			t.Fatal("got", len(values), "values but expected", len(expected))
-		}
-		for i, value := range values {
-			if value != expected[i] {
-				t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected[i], "Got:", value)
-			}
-		}
+	testErrors := map[string]string{
+		// Given             Expected error
+		"foo.*":             `Cannot access "*" on nil`,
+		"things.*.names[2]": `2 is outside the bounds of the 2 elements in "things.*.names"`,
+		"things.*.size.*":   `Can't get "*" on "things.*.size" because it is a float64`,
 	}
-
-	// Wildcard on nil
-	_, err := data.GetValues("foo.*")
-	expectedError := `Cannot access "*" on nil`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
-
-	// Bad array access after wildcard
-	_, err = data.GetValues("things.*.names[2]")
-	expectedError = `2 is outside the bounds of the 2 elements in "things.*.names"`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
-
-	// Wildcard on non-array
-	_, err = data.GetValues("things.*.size.*")
-	expectedError = `Can't get "*" on "things.*.size" because it is a float64`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
+	testGetValuesErrors(t, WILDCARDS_JSON_PATH, testErrors)
 }
 
 func TestGetValuesArray(t *testing.T) {
@@ -191,29 +140,13 @@ func TestGetValuesArray(t *testing.T) {
 		"*":      []string{`{"cool":false,"name":"Dude"}`, `{"cool":true,"name":"Sir"}`, `{"cool":false,"name":"Yo"}`},
 		"*.name": []string{"Dude", "Sir", "Yo"},
 	}
+	testGetValues(t, ARRAY_JSON_PATH, testValues)
 
-	data, _ := LoadFile(ARRAY_JSON_PATH)
-
-	for attributeChain, expected := range testValues {
-		values, err := data.GetValues(attributeChain)
-		if err != nil {
-			t.Fatal("Unexpected error: ", err, "while getting", attributeChain)
-		}
-		if len(values) != len(expected) {
-			t.Fatal("got", len(values), "values but expected", len(expected))
-		}
-		for i, value := range values {
-			if value != expected[i] {
-				t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected[i], "Got:", value)
-			}
-		}
+	testErrors := map[string]string{
+		// Given  Expected error
+		"foo.*": `Cannot access "foo" on the root array object`,
 	}
-
-	_, err := data.GetValues("foo.*")
-	expectedError := `Cannot access "foo" on the root array object`
-	if err == nil || err.Error() != expectedError {
-		t.Error("Expected error message to be:", expectedError, "but got:", err)
-	}
+	testGetValuesErrors(t, ARRAY_JSON_PATH, testErrors)
 }
 
 func TestSplitAttributeParts(t *testing.T) {
