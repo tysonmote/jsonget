@@ -122,3 +122,19 @@ rad
 dude
 ```
 
+`jsonget` also handles root array objects:
+
+```json
+[
+  { "name": "Bob" },
+  { "name": "Sally" },
+  { "name": "Joe" }
+]
+
+```bash
+% cat my.json | jsonget *.name
+Bob
+Sally
+Joe
+```
+

@@ -46,7 +46,23 @@ func LoadStdin() (data *JsonData, err error) {
 }
 
 func (j *JsonData) GetValues(attribute string) (values []string, err error) {
-	vals, err := recursiveGetValues(0, splitAttributeParts(attribute), []interface{}{j.json})
+	parts := splitAttributeParts(attribute)
+	var jsonSlice []interface{}
+
+	if reflect.TypeOf(j.json).Kind() != reflect.Slice {
+		// Root object is (hopefully) an object
+		jsonSlice = []interface{}{j.json}
+	} else {
+		// Root object is an array
+		if parts[0] != "*" {
+			errorString := fmt.Sprintf(`Cannot access "%s" on the root array object`, parts[0])
+			return []string{}, errors.New(errorString)
+		}
+		jsonSlice = j.json.([]interface{})
+		parts = parts[1:len(parts)]
+	}
+
+	vals, err := recursiveGetValues(0, parts, jsonSlice)
 	if err != nil {
 		return []string{}, err
 	}

@@ -1,0 +1,5 @@
+[
+  { "name": "Dude", "cool": false },
+  { "name": "Sir", "cool": true },
+  { "name": "Yo", "cool": false }
+]

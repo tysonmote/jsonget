@@ -11,6 +11,7 @@ import (
 
 const (
 	GOOD_JSON_PATH         = "test_json/good.json"
+	ARRAY_JSON_PATH        = "test_json/array.json"
 	WILDCARDS_JSON_PATH    = "test_json/wildcards.json"
 	BAD_JSON_PATH          = "test_json/bad.json"
 	NON_EXISTANT_JSON_PATH = "test_json/lol.json"
@@ -37,6 +38,15 @@ func TestJsonObjectFromFile(t *testing.T) {
 		t.Fatal("Unexpected error: ", err)
 	}
 	if data.json.(map[string]interface{})["foo"] != true {
+		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
+	}
+
+	// Array JSON
+	data, err = LoadFile(ARRAY_JSON_PATH)
+	if err != nil {
+		t.Fatal("Unexpected error: ", err)
+	}
+	if (data.json.([]interface{})[0]).(map[string]interface{})["name"] != "Dude" {
 		t.Error("jsonFromFile didn't load valid JSON properly. Got:", data)
 	}
 
@@ -170,6 +180,37 @@ func TestGetValuesWildcards(t *testing.T) {
 	// Wildcard on non-array
 	_, err = data.GetValues("things.*.size.*")
 	expectedError = `Can't get "*" on "things.*.size" because it is a float64`
+	if err == nil || err.Error() != expectedError {
+		t.Error("Expected error message to be:", expectedError, "but got:", err)
+	}
+}
+
+func TestGetValuesArray(t *testing.T) {
+	testValues := map[string][]string{
+		// Given  Expected
+		"*":      []string{`{"cool":false,"name":"Dude"}`, `{"cool":true,"name":"Sir"}`, `{"cool":false,"name":"Yo"}`},
+		"*.name": []string{"Dude", "Sir", "Yo"},
+	}
+
+	data, _ := LoadFile(ARRAY_JSON_PATH)
+
+	for attributeChain, expected := range testValues {
+		values, err := data.GetValues(attributeChain)
+		if err != nil {
+			t.Fatal("Unexpected error: ", err, "while getting", attributeChain)
+		}
+		if len(values) != len(expected) {
+			t.Fatal("got", len(values), "values but expected", len(expected))
+		}
+		for i, value := range values {
+			if value != expected[i] {
+				t.Error("get didn't get the values for", attributeChain, "properly. Expected:", expected[i], "Got:", value)
+			}
+		}
+	}
+
+	_, err := data.GetValues("foo.*")
+	expectedError := `Cannot access "foo" on the root array object`
 	if err == nil || err.Error() != expectedError {
 		t.Error("Expected error message to be:", expectedError, "but got:", err)
 	}
