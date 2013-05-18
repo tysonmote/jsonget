@@ -14,6 +14,7 @@ const (
 	GOOD_JSON_PATH         = "test_json/good.json"
 	ARRAY_JSON_PATH        = "test_json/array.json"
 	WILDCARDS_JSON_PATH    = "test_json/wildcards.json"
+	BIG_JSON_PATH          = "test_json/big.json"
 	BAD_JSON_PATH          = "test_json/bad.json"
 	NON_EXISTANT_JSON_PATH = "test_json/lol.json"
 )
@@ -158,5 +159,55 @@ func TestSplitAttributeParts(t *testing.T) {
 	expected := "[foo 0 20 cool 2]"
 	if got != expected {
 		t.Error("splitAttributeParts returned", got, "but we expected", expected)
+	}
+}
+
+//
+// Benchmarks
+//
+
+
+// 5/18/13, Go 1.1:
+//   100	  19757240 ns/op	 3349809 B/op	   42221 allocs/op
+func BenchmarkBigJsonRead(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := LoadFile(BIG_JSON_PATH)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// 5/18/13, Go 1.1:
+//   100000	     29215 ns/op	    2523 B/op	      61 allocs/op
+func BenchmarkBigJsonBasicGet(b *testing.B) {
+	b.ReportAllocs()
+
+	data, err := LoadFile(BIG_JSON_PATH)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		data.GetValues("result[400].tags.*")
+	}
+}
+
+// 5/18/13, Go 1.1:
+//   1000	   2285742 ns/op	  188910 B/op	    3067 allocs/op
+func BenchmarkBigJsonWildcardGet(b *testing.B) {
+	b.ReportAllocs()
+
+	data, err := LoadFile(BIG_JSON_PATH)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		data.GetValues("result.*.name")
 	}
 }
