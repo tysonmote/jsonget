@@ -47,73 +47,61 @@ func LoadStdin() (data *JsonData, err error) {
 	return &JsonData{json: object}, nil
 }
 
-// Find and return the given attribute's value. The attribute can use
-// dot-notation ("foo.bar.baz") to access inner attributes. If the value is a
-// string, it is returned without quote marks. Otherwise, it is returned as a
-// JSON string.
-func (j *JsonData) GetValue(attribute string) (value string, err error) {
-	attributeParts := splitAttributeParts(attribute)
-	attributePartsCount := len(attributeParts)
-
-	cursor := j.json
-
-	for i, attributePart := range attributeParts {
-		var nextCursor interface{}
-
-		if cursor == nil {
-			errorString := fmt.Sprintf("Cannot access \"%s\" on nil.", attributePart)
-			return "", errors.New(errorString)
-		}
-
-		cursorKind := reflect.TypeOf(cursor).Kind()
-
-		switch cursorKind {
-		case reflect.Map:
-			nextCursor = cursor.(map[string]interface{})[attributePart]
-		case reflect.Slice:
-			index, err := strconv.ParseInt(attributePart, 10, 0)
-			if err != nil {
-				parentAttribute := strings.Join(attributeParts[0:i], ".")
-				errorString := fmt.Sprintf("%s is an array, but %s is not a valid index.", parentAttribute, attributePart)
-				return "", errors.New(errorString)
-			}
-			cursorSlice := cursor.([]interface{})
-			if int(index) >= len(cursorSlice) {
-				parentAttribute := strings.Join(attributeParts[0:i], ".")
-				errorString := fmt.Sprintf("%d is outside the bounds of the %d elements in %s.", index, len(cursorSlice), parentAttribute)
-				return "", errors.New(errorString)
-			}
-			nextCursor = cursorSlice[index]
-		default:
-			parentAttribute := strings.Join(attributeParts[0:i], ".")
-			errorString := fmt.Sprintf("Can't get %s on %s because it is a %v.", attributePart, parentAttribute, cursorKind)
-			return "", errors.New(errorString)
-		}
-
-		if i == attributePartsCount-1 || nextCursor == nil {
-			return valueToString(nextCursor)
-		} else {
-			cursor = nextCursor
-		}
+func (j *JsonData) GetValues(attribute string) (values []string, err error) {
+	vals, err := recursiveGetValues(0, splitAttributeParts(attribute), []interface{}{j.json})
+	if err != nil {
+		return []string{}, err
 	}
 
-	return valueToString(cursor)
+	return valuesToStrings(vals)
 }
 
-// Get several values at once. See GetValue for attribute string formatting
-// rules.
-func (j *JsonData) GetValues(attributes []string) (values []string, err error) {
-	values = make([]string, len(attributes))
+func recursiveGetValues(depth int, attributeParts []string, objects []interface{}) (values []interface{}, err error) {
+	mappedData := []interface{}{}
 
-	for i, attribute := range attributes {
-		value, err := j.GetValue(attribute)
-		if err != nil {
-			return values, err
-		}
-		values[i] = value
+	if depth == len(attributeParts) {
+		return objects, nil
 	}
 
-	return values, nil
+	part := attributeParts[depth]
+
+	for _, object := range objects {
+		if object == nil {
+			errorString := fmt.Sprintf(`Cannot access "%s" on nil`, part)
+			return []interface{}{}, errors.New(errorString)
+		}
+
+		objectKind := reflect.TypeOf(object).Kind()
+
+		switch objectKind {
+		case reflect.Map:
+			mappedData = append(mappedData, object.(map[string]interface{})[part])
+		case reflect.Slice:
+			if part == "*" {
+				mappedData = append(mappedData, object.([]interface{})...)
+			} else {
+				index, err := strconv.ParseInt(part, 10, 0)
+				if err != nil {
+					parentAttribute := strings.Join(attributeParts[0:depth], ".")
+					errorString := fmt.Sprintf(`"%s" is not a valid index for the array at "%s"`, part, parentAttribute)
+					return []interface{}{}, errors.New(errorString)
+				}
+				slice := object.([]interface{})
+				if int(index) >= len(slice) {
+					parentAttribute := strings.Join(attributeParts[0:depth], ".")
+					errorString := fmt.Sprintf(`%d is outside the bounds of the %d elements in "%s"`, index, len(slice), parentAttribute)
+					return []interface{}{}, errors.New(errorString)
+				}
+				mappedData = append(mappedData, slice[index])
+			}
+		default:
+			parentAttribute := strings.Join(attributeParts[0:depth], ".")
+			errorString := fmt.Sprintf(`Can't get "%s" on "%s" because it is a %v`, part, parentAttribute, objectKind)
+			return []interface{}{}, errors.New(errorString)
+		}
+	}
+
+	return recursiveGetValues(depth+1, attributeParts, mappedData)
 }
 
 // Parse the given JSON.
@@ -144,12 +132,24 @@ func valueToString(value interface{}) (text string, err error) {
 	return text, nil
 }
 
+func valuesToStrings(values []interface{}) (strings []string, err error) {
+	for _, value := range values {
+		str, err := valueToString(value)
+		if err != nil {
+			return []string{}, err
+		}
+		strings = append(strings, str)
+	}
+	return strings, nil
+}
+
 // Returns all the attribute parts, including turning array access into "plain"
 // attribute access. This is something of a hack.
 //
 // Examples:
 //   * "foo.bar" --> []string{"foo", "bar"}
 //   * "foo.bar[2].neat --> []string{"foo", "bar", "2", "neat"}
+//   * "cities.*.name --> []string{"cities", "*", "name"}
 func splitAttributeParts(attribute string) []string {
 	attributeBytes := bracketsRegex.ReplaceAll([]byte(attribute), []byte{'.'})
 	attributeBytes = dotsRegex.ReplaceAll(attributeBytes, []byte{'.'})

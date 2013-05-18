@@ -1,0 +1,16 @@
+{
+  "things": [
+    {
+      "names": ["cool", "kool"],
+      "size": 2
+    },
+    {
+      "names": ["rad"],
+      "size": 1
+    },
+    {
+      "names": ["dude", "bro", "guys"],
+      "size": 3
+    }
+  ]
+}

@@ -56,10 +56,12 @@ func main() {
 
 	// Get and print the values from the JSON
 
-	values, err := data.GetValues(attributes)
-	dieIfError(err)
+	for _, attribute := range attributes {
+		values, err := data.GetValues(attribute)
+		dieIfError(err)
 
-	for _, value := range values {
-		fmt.Println(value)
+		for _, value := range values {
+			fmt.Println(value)
+		}
 	}
 }
