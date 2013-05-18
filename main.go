@@ -9,26 +9,25 @@ import (
 var (
 	filePath   = flag.String("file", "", "Read from a file instead of stdin.")
 	printNulls = flag.Bool("nulls", false, "If true, null values will be printed as 'null'.")
+	silent     = flag.Bool("silent", false, "If true, errors will not be printed to stderr.")
 )
 
 func usage() {
-	die(`Usage: jsonget -file [JSON_FILE] attribute ... [attribute]
+	fmt.Printf(`Usage: jsonget -file [JSON_FILE] attribute ... [attribute]
 
 Examples:
   cat data.json | jsonget person.name person.age
   jsonget -file data.json person.address.city`)
-}
-
-// Print an error message and exit.
-func die(text string) {
-	fmt.Fprintf(os.Stderr, "%s\n", text)
 	os.Exit(1)
 }
 
 // Die if given an error.
 func dieIfError(err error) {
 	if err != nil {
-		die(err.Error())
+		if !*silent {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+		os.Exit(1)
 	}
 }
 
