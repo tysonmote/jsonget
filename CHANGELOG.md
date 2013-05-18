@@ -1,3 +1,8 @@
+HEAD (unreleased)
+-----------------
+
+* (23da478) Support root array objects in JSON.
+
 0.0.2 - May 18th, 2013
 ----------------------
 
