@@ -7,14 +7,20 @@ import (
 )
 
 var (
-	filePath   = flag.String("file", "", "Read from a file instead of stdin.")
-	printNulls = flag.Bool("nulls", false, "If true, null values will be printed as 'null'.")
-	silent     = flag.Bool("silent", false, "If true, errors will not be printed to stderr.")
+	printVersion = flag.Bool("version", false, "Print version and exit.")
+	filePath     = flag.String("file", "", "Read from a file instead of stdin.")
+	printNulls   = flag.Bool("nulls", false, "If true, null values will be printed as 'null'.")
+	silent       = flag.Bool("silent", false, "If true, errors will not be printed to stderr.")
 )
 
 func usage() {
-	fmt.Printf(`Usage: jsonget -file [JSON_FILE] attribute ... [attribute]
+	fmt.Printf(`Usage:
+  jsonget [flags] attribute ... [attribute]
 
+Flags:
+`)
+	flag.PrintDefaults()
+	fmt.Printf(`
 Examples:
   cat data.json | jsonget person.name person.age
   jsonget -file data.json person.address.city`)
@@ -34,6 +40,11 @@ func dieIfError(err error) {
 func main() {
 	flag.Usage = usage
 	flag.Parse()
+
+	if *printVersion {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
 
 	// Load command-line attribute chains
 
