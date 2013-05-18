@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,8 +13,7 @@ import (
 )
 
 var quotedStringRegex = regexp.MustCompile(`\A"(.+)"\z`)
-var bracketsRegex = regexp.MustCompile(`[\[\]]+`)
-var dotsRegex = regexp.MustCompile(`\.+`)
+var partsRegex = regexp.MustCompile(`[\[\]\.]+`)
 
 type JsonData struct {
 	json interface{}
@@ -151,12 +149,7 @@ func valuesToStrings(values []interface{}) (strings []string, err error) {
 //   * "foo.bar[2].neat --> []string{"foo", "bar", "2", "neat"}
 //   * "cities.*.name --> []string{"cities", "*", "name"}
 func splitAttributeParts(attribute string) []string {
-	attributeBytes := bracketsRegex.ReplaceAll([]byte(attribute), []byte{'.'})
-	attributeBytes = dotsRegex.ReplaceAll(attributeBytes, []byte{'.'})
-
-	if bytes.LastIndex(attributeBytes, []byte{'.'}) == len(attributeBytes)-1 {
-		attributeBytes = attributeBytes[:len(attributeBytes)-1]
-	}
-
-	return strings.Split(string(attributeBytes), ".")
+	cleanAttribute := partsRegex.ReplaceAllString(attribute, ".")
+	cleanAttribute = strings.TrimRight(cleanAttribute, ".")
+	return strings.Split(cleanAttribute, ".")
 }
