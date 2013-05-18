@@ -13,7 +13,9 @@ import (
 	"strings"
 )
 
-var quotedString = regexp.MustCompile(`\A"(.+)"\z`)
+var quotedStringRegex = regexp.MustCompile(`\A"(.+)"\z`)
+var bracketsRegex = regexp.MustCompile(`[\[\]]+`)
+var dotsRegex = regexp.MustCompile(`\.+`)
 
 type JsonData struct {
 	json interface{}
@@ -29,7 +31,7 @@ func LoadFile(file string) (data *JsonData, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &JsonData{object}, nil
+	return &JsonData{json: object}, nil
 }
 
 // Read stdin for JSON and parse it into a JsonObject object.
@@ -42,7 +44,7 @@ func LoadStdin() (data *JsonData, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &JsonData{object}, nil
+	return &JsonData{json: object}, nil
 }
 
 // Find and return the given attribute's value. The attribute can use
@@ -63,7 +65,7 @@ func (j *JsonData) GetValue(attribute string) (value string, err error) {
 			return "", errors.New(errorString)
 		}
 
-		cursorKind := reflect.ValueOf(cursor).Kind()
+		cursorKind := reflect.TypeOf(cursor).Kind()
 
 		switch cursorKind {
 		case reflect.Map:
@@ -137,7 +139,8 @@ func valueToString(value interface{}) (text string, err error) {
 		return "", err
 	}
 	text = string(textBytes)
-	text = quotedString.ReplaceAllString(text, "$1")
+	text = quotedStringRegex.ReplaceAllString(text, "$1")
+
 	return text, nil
 }
 
@@ -146,16 +149,14 @@ func valueToString(value interface{}) (text string, err error) {
 //
 // Examples:
 //   * "foo.bar" --> []string{"foo", "bar"}
-//   * "foo.bar[2].neat --> [string]{"foo", "bar", "2", "neat"}
+//   * "foo.bar[2].neat --> []string{"foo", "bar", "2", "neat"}
 func splitAttributeParts(attribute string) []string {
-	brackets := regexp.MustCompile(`[\[\]]+`)
-	dots := regexp.MustCompile(`\.+`)
-
-	attributeBytes := brackets.ReplaceAll([]byte(attribute), []byte{'.'})
-	attributeBytes = dots.ReplaceAll(attributeBytes, []byte{'.'})
+	attributeBytes := bracketsRegex.ReplaceAll([]byte(attribute), []byte{'.'})
+	attributeBytes = dotsRegex.ReplaceAll(attributeBytes, []byte{'.'})
 
 	if bytes.LastIndex(attributeBytes, []byte{'.'}) == len(attributeBytes)-1 {
 		attributeBytes = attributeBytes[:len(attributeBytes)-1]
 	}
+
 	return strings.Split(string(attributeBytes), ".")
 }
