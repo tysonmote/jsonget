@@ -77,3 +77,41 @@ And JSON objects and arrays are returned as JSON:
 {"baz":5}
 ```
 
+Wildcards
+=========
+
+`jsonget` supports wildcards ("*") for looping through arrays. For example:
+
+```json
+{
+  "things": [
+    {
+      "names": ["cool", "sweet"],
+      "size": 2
+    },
+    {
+      "names": ["rad"],
+      "size": 1
+    },
+    {
+      "names": ["dude", "bro", "guys"],
+      "size": 3
+    }
+  ]
+}
+```
+
+```bash
+% cat my.json | jsonget things.*.size
+2
+1
+3
+```
+
+```bash
+% cat my.json | jsonget things.*.names
+["cool","sweet"]
+["rad"]
+["dude","bro","guys"]
+```
+

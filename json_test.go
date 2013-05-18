@@ -130,10 +130,10 @@ func TestGetValues(t *testing.T) {
 func TestGetValuesWildcards(t *testing.T) {
 	testValues := map[string][]string{
 		// Given              Expected
-		"things.*":         []string{`{"names":["cool","kool"],"size":2}`, `{"names":["rad"],"size":1}`, `{"names":["dude","bro","guys"],"size":3}`},
+		"things.*":         []string{`{"names":["cool","sweet"],"size":2}`, `{"names":["rad"],"size":1}`, `{"names":["dude","bro","guys"],"size":3}`},
 		"things.*.size":    []string{"2", "1", "3"},
 		"things.*.names.0": []string{"cool", "rad", "dude"},
-		"things.*.names.*": []string{"cool", "kool", "rad", "dude", "bro", "guys"},
+		"things.*.names.*": []string{"cool", "sweet", "rad", "dude", "bro", "guys"},
 	}
 
 	data, _ := LoadFile(WILDCARDS_JSON_PATH)
