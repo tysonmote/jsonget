@@ -1,5 +1,5 @@
 jsonget
--------
+=======
 
 `jsonget` is a command-line tool for extracting values out from JSON. This is
 useful, for example, when you're `curl`ing a JSON api and just want to get a
@@ -20,12 +20,12 @@ Moscow
 ```
 
 Installation
-============
+------------
 
     go get github.com/tysontate/jsonget
 
 Usage
-=====
+-----
 
 Given `my.json`:
 
@@ -78,7 +78,7 @@ And JSON objects and arrays are returned as JSON:
 ```
 
 Wildcards
-=========
+---------
 
 `jsonget` supports wildcards ("*") for looping through arrays. For example:
 
