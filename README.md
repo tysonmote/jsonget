@@ -115,3 +115,10 @@ Wildcards
 ["dude","bro","guys"]
 ```
 
+```bash
+% cat my.json | jsonget things.*.names[0]
+cool
+rad
+dude
+```
+
