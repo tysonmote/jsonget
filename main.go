@@ -23,7 +23,8 @@ Flags:
 	fmt.Printf(`
 Examples:
   cat data.json | jsonget person.name person.age
-  jsonget -file data.json person.address.city`)
+  jsonget -file data.json person.address.city
+`)
 	os.Exit(1)
 }
 
