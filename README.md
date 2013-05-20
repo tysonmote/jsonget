@@ -130,6 +130,7 @@ dude
   { "name": "Sally" },
   { "name": "Joe" }
 ]
+```
 
 ```bash
 % cat my.json | jsonget *.name
