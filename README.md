@@ -139,3 +139,9 @@ Sally
 Joe
 ```
 
+Alternatives
+------------
+
+* (jq)[http://stedolan.github.io/jq/] - More powerful, but also more complex. Written in C.
+* (RecordStream)[https://github.com/benbernard/RecordStream] - Even more powerful, but also even more complex. Written in Perl.
+ 
